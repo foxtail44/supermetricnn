@@ -25,7 +25,7 @@ class MetricDataLoader(data.Dataset):
         self.inputs, self.outputs = read_csv(csv_path, bin_step=0.25)
 
     def __len__(self):
-        return len(self.all_csv)
+        return len(self.inputs)
 
     def __getitem__(self, item):
         return torch.Tensor(self.inputs[item]), self.outputs[item]

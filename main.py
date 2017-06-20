@@ -12,13 +12,12 @@ bs = 10
 trainset = dataloader.MetricDataLoader(path, 0.25)
 
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=bs)
-
+print trainset[0]
 model = model.CNNSimple(10, 20, 3)
 
-optimizer = torch.optim.SGD(model, lr)
+optimizer = torch.optim.SGD(model.parameters(), lr)
 
 criterion = nn.CrossEntropyLoss()
-
 
 def train(train_loader, model, criterion, optimizer, epoch):
     batch_time = AverageMeter()
@@ -64,6 +63,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                    epoch, i, len(train_loader), batch_time=batch_time,
                    loss=losses, top1=top1, top5=top5))
 
+train(train_loader, model, criterion, optimizer, 0)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
