@@ -21,7 +21,7 @@ def read_csv(path, bin_step):
 
 
 class MetricDataLoader(data.Dataset):
-    def __init__(self, csv_path, bin_step ):
+    def __init__(self, csv_path, bin_step):
         self.inputs, self.outputs = read_csv(csv_path, bin_step=0.25)
 
     def __len__(self):
