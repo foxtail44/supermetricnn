@@ -9,7 +9,7 @@ def read_csv(path, bin_step):
     csv_files = os.listdir(path)
 
     for file in csv_files:
-        with open(os.path.join("./dataset/", file)) as csvfile:
+        with open(os.path.join(path, file)) as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 all_csv += [[float(i) for i in row]]

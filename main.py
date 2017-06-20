@@ -18,7 +18,7 @@ resume = None
 start_epoch = 0
 
 trainset = dataloader.MetricDataLoader(path_train, 0.25)
-valset = dataloader.MetricDataLoader(path_trai, 0.25)
+valset = dataloader.MetricDataLoader(path_validate, 0.25)
 
 
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=bs)
@@ -34,7 +34,9 @@ criterion = nn.CrossEntropyLoss()
 
 def main():
     # Add code to resume from checkpoint here
-
+    
+    resume = None
+    start_epoch = 0
     best_prec1 = 0
 
     # Load checkpoint if flag up
