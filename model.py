@@ -3,33 +3,37 @@ from torch import nn
 
 
 class Conv(nn.Module):
-    def __init__(self, in_filters, out_filters, size = 3):
+    def __init__(self, in_filters, out_filters, size=3, bn_on=True):
         super(Conv, self).__init__()
+        self.bn_on = bn_on
         self.bn = nn.BatchNorm1d(in_filters)
         padding = size
         self.conv = nn.Conv1d(in_filters, out_filters, size, padding=padding)
         self.lrelu = nn.LeakyReLU()
 
     def forward(self, input):
-        return process(input, self.bn, self.conv, self.lrelu)
+        if self.bn_on:
+            return process(input, self.bn, self.conv, self.lrelu)
+        return process(input, self.conv, self.lrelu)
 
 
 class CNNSimple(torch.nn.Module):
-    def __init__(self, in_filters):
+    def __init__(self, input_size):
         super(CNNSimple, self).__init__()
 
         # input Nx10x1
-        self.conv1 = Conv(in_filters, 10, 3)    # Nx10x5
-        self.conv2 = Conv(10, 64, 3)  # Νx10x9
-        self.conv3 = Conv(64, 128, 3)  # Nx128x13
-        self.conv4 = Conv(128, 256, 3)  # Nx256x17
-        self.conv5 = Conv(256, 1, 2)    # Nx1x20
+        self.linear = nn.Linear(input_size, 128)
+        self.conv1 = Conv(128, 256, 3)    # Nx10x5
+        self.conv2 = Conv(256, 512, 3)  # Νx10x9
+        self.conv3 = Conv(512, 1024, 3)  # Nx128x13
+        self.conv4 = Conv(1024, 1024, 3)  # Nx256x17
+        self.conv5 = Conv(1024, 1, 2)    # Nx1x20
         self.act = nn.Sigmoid()
 
     def forward(self, input):
-        return process(input,
-                       self.conv1, self.conv2, self.conv3,
-                       self.conv4, self.conv5, self.act).squeeze(1)
+        input = process(input, self.linear)
+        input = process(input.unsqueeze(2), self.conv1, self.conv2, self.conv3)
+        return process(input, self.conv4, self.conv5).squeeze(1)
 
 
 def process(*func_input):
