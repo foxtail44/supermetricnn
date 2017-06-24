@@ -6,31 +6,21 @@ import dataloader
 import time
 import os
 import shutil
+import conf
 
-path_train = "./dataset/train/"
-path_validate = "./dataset/validate/"
-
-lr = 0.0001
-bs = 10
-epochs = 1000000
-
-print_freq = 100
+params = dataloader.SuperMetricParameters(conf.smcnn_conf["SM1"])
 
 resume = None
 start_epoch = 0
 
-trainset = dataloader.MetricDataLoader(path_train, 0.25)
-valset = dataloader.MetricDataLoader(path_validate, 0.25)
-
-
-train_loader = torch.utils.data.DataLoader(trainset, batch_size=bs)
-val_loader = torch.utils.data.DataLoader(valset, batch_size=bs)
+trainset = dataloader.MetricDataLoader(params.path_train, 0.25)
+valset = dataloader.MetricDataLoader(params.path_eval, 0.25)
+train_loader = torch.utils.data.DataLoader(trainset, batch_size=params.batch_size)
+val_loader = torch.utils.data.DataLoader(valset, batch_size=params.batch_size)
 
 
 model = CNNSimple(10)
-
-optimizer = torch.optim.SGD(model.parameters(), lr)
-
+optimizer = torch.optim.SGD(model.parameters(), params.learning_rate)
 criterion = nn.CrossEntropyLoss()
 
 
@@ -53,8 +43,8 @@ def main():
         else:
             print("**No checkpoint found**")
 
-    for epoch in range(start_epoch, epochs):
-            adjust_learning_rate(lr, optimizer, epoch)
+    for epoch in range(start_epoch, params.epochs):
+            adjust_learning_rate(params.learning_rate, optimizer, epoch)
             # train for one epoch
             train(train_loader, model, criterion, optimizer, epoch)
 
@@ -109,7 +99,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % print_freq == 0:
+        if i % params.print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'BTime {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -119,7 +109,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                    loss=losses, top1=top1, top5=top5))
 
 
-def validate(val_loader, model, criterion, optimizer, epoch):
+def validate(val_loader, model, criterion):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -127,7 +117,7 @@ def validate(val_loader, model, criterion, optimizer, epoch):
     top5 = AverageMeter()
 
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    for i, (input, target) in enumerate(val_loader):
         model.train()
 
         # measure data loading time
@@ -151,7 +141,7 @@ def validate(val_loader, model, criterion, optimizer, epoch):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % print_freq == 0:
+        if i % params.print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'BTime {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
