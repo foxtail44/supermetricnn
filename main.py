@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-import model
+from model import CNNSimple
 import dataloader
 import time
 import os
@@ -10,9 +10,11 @@ import shutil
 path_train = "./dataset/train/"
 path_validate = "./dataset/validate/"
 
-lr = 0.1
+lr = 0.0001
 bs = 10
 epochs = 1000000
+
+print_freq = 100
 
 resume = None
 start_epoch = 0
@@ -25,7 +27,7 @@ train_loader = torch.utils.data.DataLoader(trainset, batch_size=bs)
 val_loader = torch.utils.data.DataLoader(valset, batch_size=bs)
 
 
-model = model.CNNSimple(10, 20, 3)
+model = CNNSimple(10)
 
 optimizer = torch.optim.SGD(model.parameters(), lr)
 
@@ -95,6 +97,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         prec1, prec5 = accuracy(output.data.cpu(), target_var.data.cpu(), topk=(1, 5))
         losses.update(loss.data[0], input_var.data.size(0))
+        top1.update(prec1[0], input_var.data.size(0))
+        top5.update(prec5[0], input_var.data.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -105,7 +109,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % 10:
+        if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'BTime {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -140,12 +144,14 @@ def validate(val_loader, model, criterion, optimizer, epoch):
 
         prec1, prec5 = accuracy(output.data.cpu(), target_var.data.cpu(), topk=(1, 5))
         losses.update(loss.data[0], input_var.data.size(0))
+        top1.update(prec1[0], input_var.data.size(0))
+        top5.update(prec5[0], input_var.data.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % 10:
+        if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'BTime {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -153,6 +159,7 @@ def validate(val_loader, model, criterion, optimizer, epoch):
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                    epoch, i, len(train_loader), batch_time=batch_time,
                    loss=losses, top1=top1, top5=top5))
+    return top1.avg
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

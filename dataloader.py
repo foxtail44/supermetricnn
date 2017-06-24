@@ -28,5 +28,5 @@ class MetricDataLoader(data.Dataset):
         return len(self.inputs)
 
     def __getitem__(self, item):
-        return torch.Tensor(self.inputs[item]), self.outputs[item]
+        return torch.Tensor(self.inputs[item]).unsqueeze(1), self.outputs[item]
 

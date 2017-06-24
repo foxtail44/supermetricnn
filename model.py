@@ -6,7 +6,7 @@ class Conv(nn.Module):
     def __init__(self, in_filters, out_filters, size = 3):
         super(Conv, self).__init__()
         self.bn = nn.BatchNorm1d(in_filters)
-        padding = size / 2
+        padding = size
         self.conv = nn.Conv1d(in_filters, out_filters, size, padding=padding)
         self.lrelu = nn.LeakyReLU()
 
@@ -15,24 +15,21 @@ class Conv(nn.Module):
 
 
 class CNNSimple(torch.nn.Module):
-    def __init__(self,
-                 in_filters,
-                 out_filters,
-                 kernel_size):
+    def __init__(self, in_filters):
         super(CNNSimple, self).__init__()
 
-        self.conv1 = Conv(in_filters, 10, kernel_size)
-        self.conv2 = Conv(10, 12, kernel_size)
-        self.conv3 = Conv(12, 14, kernel_size)
-        self.conv4 = Conv(14, 16, kernel_size)
-        self.conv5 = Conv(16, 18, kernel_size)
-        self.conv6 = Conv(18, out_filters, kernel_size)
+        # input Nx10x1
+        self.conv1 = Conv(in_filters, 10, 3)    # Nx10x5
+        self.conv2 = Conv(10, 64, 3)  # Νx10x9
+        self.conv3 = Conv(64, 128, 3)  # Nx128x13
+        self.conv4 = Conv(128, 256, 3)  # Nx256x17
+        self.conv5 = Conv(256, 1, 2)    # Nx1x20
         self.act = nn.Sigmoid()
 
     def forward(self, input):
-        input = process(input, self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6)
-        output = self.act(input)
-        return output
+        return process(input,
+                       self.conv1, self.conv2, self.conv3,
+                       self.conv4, self.conv5, self.act).squeeze(1)
 
 
 def process(*func_input):
